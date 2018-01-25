@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link rel="stylesheet" href="css/custom/weektwomtstyle.css" type="text/css"/>
+	<link rel="stylesheet" href="css/vendos/normalize.css" type="text/css"/>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src="js/vendors/jquery-ui-1.11.4.min.js"></script>
+
+	<title>Mobile Tiles </title>
+</head>
+
+<body>
+<!-- PAGE 1 -->
+	<div id="page1">
+		<div id="logo">
+			<img src="../mobile_tiles/images/logo/logo.gif">
+		</div>
+		
+		<div id="controller">
+			<a href="#"><img id="gear" src="../mobile_tiles/images/icons/gear.png" onmouseover="this.src='images/icons/gear_h.png'" onmouseout="this.src='images/icons/gear.png'"></a>
+		</div>
+	</div>
+
+	<ul id="imagelist">
+
+	</ul>
+
+	<div id="ads">
+		<img src="../mobile_tiles/images/ads/ads.jpg"/>
+	</div>
+
+<!-- PAGE 2 -->
+	<div id="page2">
+		<div id="form">
+			<div id="top">
+				<h2>Personilize</h2>
+				<input type="button" id="done" value="Done"/>
+			</div>
+
+			<div class="text">
+				<p>Tap the check marks to Add/Remove categories from your Home Screen. Tap and hold the <img id="inp" src="../mobile_tiles/images/icons/stack.png" width="20" height="20"> to reorder category tiles</p>
+			</div>
+
+			<div id="head">
+				<p>Want More Local News? Tap Here</p>
+			</div>
+
+			<table id="tileList" rules="rows">
+				
+			</table>
+
+			<div id="footer">
+				<ul>
+					<li>Categories</li>
+					<li>Report News to AP</li>
+					<li>Settings</li>
+				</ul>
+			</div>
+
+	</div>
+
+	<script >
+		var tileData;
+
+///* PAGE CHANGE *///
+		$(document).ready(function() {
+			$("#page1").show();
+   			$("#page2").hide();
+
+ 			$("#done").click(function() {		
+ 				update(tileData);
+ 				$("#page2").fadeOut(500);       
+    		});
+
+    		$("#gear").click(function() {
+       			$("#page2").fadeIn(500);
+    		});
+
+		});
+
+///* CHECK THE TILES *///
+		function choose(id) {
+			var selector= "#t"+id+" td:first-child";	
+			var className = $(selector).attr('class');
+  			if(className=="check") {
+				$(selector).switchClass( "check", "empty");	
+				$.each(tileData.Tiles,function(i, item) {
+					if(item.DisplayOrder==id){
+						item.TileProperties.HomeTileStatus=false;
+					}
+
+				});				
+			}
+				else if (className=="empty") {
+					$(selector).switchClass( "empty", "check");
+					$.each(tileData.Tiles,function(i, item) {
+	
+						if(item.DisplayOrder==id) {
+							item.TileProperties.HomeTileStatus=true;
+						}
+					});
+				}
+		}
+
+///* SHOW THE TILES *///
+		function update(data) {
+			$("#imagelist").empty();
+			tileData=data;
+   			data.Tiles.sort(function(a, b) {
+ 			return a.DisplayOrder-b.DisplayOrder
+			});
+
+   			$.each(data.Tiles,function(i, item) {	
+				var order=item.DisplayOrder;
+				var caption=item.Caption;
+				var status=item.TileProperties.HomeTileStatus;
+				var url=item.TileProperties.HomeURL;
+		
+				if (url.substring(url.lastIndexOf(".")+1)!=="html") {
+					if(status!== false){
+						
+						$("#imagelist").append("<li class='tiles' style='background-image:url(" + url + ")'><p>"+ caption + "</p></li>");	
+
+						$("#tileList").append("<tr class='list' id='t"+order+"'><td class='check' onClick='choose("+order+")'></td><td>" + caption + "</td><td class='drag'></td></tr>");
+					}
+
+					else {
+						$("#tileList").append("<tr class='list' id='t"+order+"'><td class='empty' onClick='choose("+order+")'></td><td>" + caption + "</td><td class='drag'></td></tr>");
+					}
+
+				}	
+   			});
+   
+  		}
+
+		$.ajax({
+    		url: "json/tiles.json",
+  			type: "GET",
+  			dataType: "json",
+  			success: update,
+  			error: function() {
+    			alert("ERROR!!!");
+  			}
+		});
+
+		$(function() {
+    		$("#tileList").sortable({
+    			cursor:"pointer",
+    			items :".list",                        
+    			opacity:0.6,                      
+    			revert:true,                       
+   			});
+		});
+	</script>
+
+</body>
+</html>
